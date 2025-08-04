@@ -1,0 +1,218 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Multi-tenant API with JWT authentication and DynamoDB
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+
+Globals:
+  Function:
+    Runtime: python3.13
+    Timeout: 30
+    Environment:
+      Variables:
+        ENVIRONMENT: !Ref Environment
+        JWT_SECRET_NAME: !Sub "${AWS::StackName}-jwt-secret"
+
+Resources:
+  # DynamoDB Tables
+  ApiKeysTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${AWS::StackName}-api-keys"
+      AttributeDefinitions:
+        - AttributeName: api_key_hash
+          AttributeType: S
+      KeySchema:
+        - AttributeName: api_key_hash
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  CustomerDataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${AWS::StackName}-customer-data"
+      AttributeDefinitions:
+        - AttributeName: customer_id
+          AttributeType: S
+        - AttributeName: data_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: customer_id
+          KeyType: HASH
+        - AttributeName: data_id
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+  # Secrets Manager for JWT Secret
+  JWTSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${AWS::StackName}-jwt-secret"
+      Description: JWT signing secret
+      GenerateSecretString:
+        SecretStringTemplate: '{}'
+        GenerateStringKey: 'secret'
+        PasswordLength: 64
+        ExcludeCharacters: '"@/\'
+
+  # Admin API Key Secret
+  AdminApiKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${AWS::StackName}-admin-api-key"
+      Description: Admin API key for admin endpoints
+      GenerateSecretString:
+        SecretStringTemplate: '{}'
+        GenerateStringKey: 'admin_api_key'
+        PasswordLength: 32
+        ExcludeCharacters: '"@/\'
+
+  # Lambda Functions
+  AuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-auth"
+      CodeUri: src/auth/
+      Handler: app.lambda_handler
+      Environment:
+        Variables:
+          API_KEYS_TABLE: !Ref ApiKeysTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ApiKeysTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource: !Ref JWTSecret
+      Events:
+        AuthApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /auth
+            Method: post
+
+  AuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-authorizer"
+      CodeUri: src/authorizer/
+      Handler: app.lambda_handler
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource: !Ref JWTSecret
+
+  DataApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-data-api"
+      CodeUri: src/api/
+      Handler: app.lambda_handler
+      Environment:
+        Variables:
+          CUSTOMER_DATA_TABLE: !Ref CustomerDataTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CustomerDataTable
+      Events:
+        GetData:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /data
+            Method: get
+            Auth:
+              Authorizer: CustomAuthorizer
+        PostData:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /data
+            Method: post
+            Auth:
+              Authorizer: CustomAuthorizer
+
+  KeyManagerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-key-manager"
+      CodeUri: src/key-manager/
+      Handler: app.lambda_handler
+      Environment:
+        Variables:
+          API_KEYS_TABLE: !Ref ApiKeysTable
+          ADMIN_API_KEY_SECRET: !Ref AdminApiKeySecret
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ApiKeysTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource: !Ref AdminApiKeySecret
+      Events:
+        CreateKey:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /admin/keys
+            Method: post
+        RevokeKey:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /admin/keys/{keyId}
+            Method: delete
+
+
+
+  # API Gateway
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "${AWS::StackName}-api"
+      StageName: !Ref Environment
+      Auth:
+        Authorizers:
+          CustomAuthorizer:
+            FunctionArn: !GetAtt AuthorizerFunction.Arn
+            Identity:
+              Headers:
+                - Authorization
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+        AllowOrigin: "'*'"
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
+    Export:
+      Name: !Sub "${AWS::StackName}-api-url"
+
+  ApiKeysTableName:
+    Description: API Keys table name
+    Value: !Ref ApiKeysTable
+    Export:
+      Name: !Sub "${AWS::StackName}-api-keys-table"
+
+  CustomerDataTableName:
+    Description: Customer data table name
+    Value: !Ref CustomerDataTable
+    Export:
+      Name: !Sub "${AWS::StackName}-customer-data-table"
+
+  AdminApiKey:
+    Description: Admin API key for admin endpoints
+    Value: !Sub "{{resolve:secretsmanager:${AdminApiKeySecret}:SecretString:admin_api_key}}"
+    Export:
+      Name: !Sub "${AWS::StackName}-admin-api-key"
