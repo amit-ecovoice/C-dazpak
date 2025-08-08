@@ -38,7 +38,7 @@ Same format as S3 processor:
 
 Example XLSX with headers:
  | customer_name | email | phone |
-|-------------|---------------|-------|-------|
+|-------------|---------------|-------|
 | John Doe | john@example.com | 555-1234 |
 | Jane Smith | jane@example.com | 555-5678 |
 
