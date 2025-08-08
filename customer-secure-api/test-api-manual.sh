@@ -30,6 +30,63 @@ export TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6InRlc3QtY
 # Create a record
 curl -X POST "$API_URL/data" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{"name": "My Data Item","value": 100,"description": "Custom field"}'
 
+curl -X POST "$API_URL/data" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{
+   "name": "Calyx Containers",
+   "Plant": "Gardena",
+   "Customer": "Calyx Containers",
+   "SONum": 104449,
+   "SOLine": 1,
+   "JobCode": 104449,
+   "JobLine": 1,
+   "CustPO": "PO7981",
+   "ItemGroup": "900-PCH",
+   "ItemCode": 110088,
+   "ItemDesc": "AYR FL Kynd 3.5g bag White",
+   "PlanAvailDate": "2025-04-09",
+   "CustItemRef": "AYWL-FL-1169-KY30",
+   "Job Inv Qty": 0,
+   "Job Ord Qty": "315,000",
+   "Job Recd Qty": "303,800",
+   "SO Shipped Qty": "303,800",
+   "Job Outst Qty": 0,
+   "Unit": "EA",
+   "SOPrice": "122.32",
+   "OrderStatus": "Complete",
+   "Case": {
+      "Roll Qty": 1000
+   }
+}'
+
+[
+ {
+   "Plant": "Gardena",
+   "Customer": "Calyx Containers",
+   "SONum": 104449,
+   "SOLine": 1,
+   "JobCode": 104449,
+   "JobLine": 1,
+   "CustPO": "PO7981",
+   "ItemGroup": "900-PCH",
+   "ItemCode": 110088,
+   "ItemDesc": "AYR FL Kynd 3.5g bag White",
+   "PlanAvailDate": "2025-04-09",
+   "CustItemRef": "AYWL-FL-1169-KY30",
+   "Job Inv Qty": 0,
+   "Job Ord Qty": "315,000",
+   "Job Recd Qty": "303,800",
+   "SO Shipped Qty": "303,800",
+   "Job Outst Qty": 0,
+   "Unit": "EA",
+   "SOPrice": 122.32,
+   "OrderStatus": "Complete",
+   "Case": {
+      "Roll Qty": 1000
+   }
+}
+]
+
+
+
 {"message": "Data created successfully", "item": {"customer_id": "test-customer-1", "data_id": "2fe7d451-05c6-42e5-bf9b-5d8fddf940f7", "name": "My Data Item", "value": 100, "created_at": "2025-08-04T19:09:56.473428Z", "description": "Custom field"}}
 
 # Auto-populated Fields:
