@@ -37,10 +37,10 @@ Same format as S3 processor:
 - **Additional columns**: Any extra data
 
 Example XLSX with headers:
-| customer_id | customer_name | email | phone |
+ | customer_name | email | phone |
 |-------------|---------------|-------|-------|
-| cust001 | John Doe | john@example.com | 555-1234 |
-| cust002 | Jane Smith | jane@example.com | 555-5678 |
+| John Doe | john@example.com | 555-1234 |
+| Jane Smith | jane@example.com | 555-5678 |
 
 ## How It Works
 
