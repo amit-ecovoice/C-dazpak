@@ -31,10 +31,7 @@ python3 csv-to-api.py customers.xlsx https://abc123.execute-api.us-east-1.amazon
 
 ## XLSX Format
 
-Same format as S3 processor:
-- **Column 1**: customer_id
-- **Column 2**: customer_name  
-- **Additional columns**: Any extra data
+### Make sure first row has column names . Three columns are mandatory "Customer" , "SONum", "SOLine" ###
 
 Example XLSX with headers:
  | customer_name | email | phone |
