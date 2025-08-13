@@ -82,9 +82,8 @@ def create_api_key(event):
                     UpdateExpression='SET active = :active',
                     ExpressionAttributeValues={':active': True}
                 )
-                # Generate new API key from the hash (reverse lookup not possible)
-                # So we'll generate a new key and update the hash
-                api_key = secrets.token_urlsafe(32)
+                # Generate new alphanumeric API key (no symbols)
+                api_key = ''.join(secrets.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789') for _ in range(32))
                 key_hash = hashlib.sha256(api_key.encode()).hexdigest()
                 
                 table.update_item(
@@ -142,8 +141,8 @@ def create_api_key(event):
     except Exception as e:
         print(f"Error checking customer_name: {e}")
     
-    # Generate secure API key
-    api_key = secrets.token_urlsafe(32)
+    # Generate secure alphanumeric API key (no symbols)
+    api_key = ''.join(secrets.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789') for _ in range(32))
     key_hash = hashlib.sha256(api_key.encode()).hexdigest()
     
     # Store in DynamoDB

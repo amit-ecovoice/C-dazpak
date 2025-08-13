@@ -36,4 +36,13 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["KeyManagerFunction"]
 
+[function_build_definitions.3299c00b-3060-48d3-bc67-1624259680e2]
+codeuri = "/Users/bajajfam/RS-dazpak/C-dazpak/customer-secure-api/src/admin-data"
+runtime = "python3.13"
+architecture = "x86_64"
+handler = "app.lambda_handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["AdminDataFunction"]
+
 [layer_build_definitions]

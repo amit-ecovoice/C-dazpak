@@ -25,12 +25,9 @@ if ! command -v sam &> /dev/null; then
 fi
 
 # Build the application
-echo "Building SAM application..."
-sam build
+echo "Deleting SAM application..."
+sam delete --stack-name $STACK_NAME --region $REGION --profile $PROFILE --no-prompts
 
-# Deploy the application
-echo "Deploying SAM application..."
 
-sam deploy --stack-name $STACK_NAME --region $REGION --parameter-overrides Environment=$ENVIRONMENT --capabilities CAPABILITY_NAMED_IAM --confirm-changeset --resolve-s3 --profile $PROFILE
 
 
