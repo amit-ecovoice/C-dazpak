@@ -42,16 +42,12 @@ Example XLSX with headers:
 
 ## How It Works
 
-1. Authenticates with API using provided API key
-2. Gets JWT token for subsequent requests
-3. Reads XLSX file from same directory
-4. For each row, creates POST request to `/data` endpoint
-5. Uses customer_name (column 2) as mandatory `name` field
-6. Stores all XLSX columns in `data` attribute with automatic type conversion
-7. Reports processing results
+1. Authenticates with Admin API Key
+2. Reads XLSX file from same directory
+3. For each row, creates PUT request to `/admin/upsert` endpoint
+4. Stores all XLSX columns in `data` attribute with automatic type conversion
+5. Reports processing results
 
 ## Error Handling
 
-- Skips rows with missing customer_id or customer_name
-- Reports failed insertions but continues processing
 - Shows total count of successfully processed records
