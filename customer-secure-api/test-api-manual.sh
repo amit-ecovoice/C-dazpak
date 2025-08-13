@@ -16,7 +16,7 @@ export ADMIN_API_KEY="}GU1*0$)N'Ure=#C?JrkMHyk.F^*KH8,"
 curl -X POST "$API_URL/admin/keys" -H "Content-Type: application/json" -H "X-Admin-API-Key: $ADMIN_API_KEY" -d "{\"customer_id\":\"$TEST_CUSTOMER_ID\",\"customer_name\":\"$TEST_CUSTOMER_NAME\"}"
 # {"api_key": "YAHA3DePs-MOPpMq3_xZG8lUYeT3SSm8fTFz3sczXVk", "customer_id": "test-customer-1", "message": "API key created successfully"} 
 
-# Post Data for a customer using Admin Keys
+# Post Data for a customer using Admin Keys (You can also use Utility service to post data using Excle sheet - https://github.com/amit-ecovoice/C-dazpak/tree/main/customer-secure-api/utility)
 curl -X PUT "$API_URL/admin/upsert" -H "X-Admin-API-Key: $ADMIN_API_KEY" -H "Content-Type: application/json" -d '{"customer_id": "Calyx Containers", "data_id": "SO001-001", "data": {"name": "Product Name","value": 100,"SONum": "SO001","SOLine": "001"}}'
 
 curl -X DELETE "$API_URL/admin/keys/$TEST_CUSTOMER_ID" -H "Content-Type: application/json"
