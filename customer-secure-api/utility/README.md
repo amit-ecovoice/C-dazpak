@@ -15,13 +15,13 @@ pip install -r requirements-utility.txt
 
 ```bash
 cd utility
-python3 csv-to-api.py <xlsx-file> <api-url> <api-key>
+python3 csv-to-api.py <xlsx-file> <api-url> <admin-api-key>
 ```
 
 ### Parameters
 - `xlsx-file`: Local XLSX file path
 - `api-url`: API Gateway URL (from CloudFormation outputs)
-- `api-key`: Customer API key (created via admin endpoint)
+- `admin-api-key`: Admin API key (Available in Secrets Manager)
 
 ### Example
 ```bash
