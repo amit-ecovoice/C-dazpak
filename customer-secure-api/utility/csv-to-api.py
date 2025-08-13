@@ -5,66 +5,77 @@ import sys
 import os
 import pandas as pd
 
-def process_xlsx_via_api(xlsx_file, api_url, api_key):
-    """Process XLSX file and insert data via POST API"""
+def process_xlsx_via_upsert(xlsx_file, api_url, admin_api_key):
+    """Process XLSX file and upsert data via admin endpoint"""
     
-    # Get JWT token
-    auth_response = requests.post(f"{api_url}/auth", 
-                                json={"api_key": api_key})
-    if auth_response.status_code != 200:
-        print(f"❌ Authentication failed: {auth_response.text}")
-        return
-    
-    token = auth_response.json()["token"]
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    headers = {
+        "X-Admin-API-Key": admin_api_key,
+        "Content-Type": "application/json"
+    }
     
     # Process XLSX
     df = pd.read_excel(xlsx_file)
-    
-    if len(df.columns) < 2:
-        print("❌ XLSX must have at least 2 columns")
+    print(f"📄 Processing {len(df)} records from {xlsx_file}")
+    print(f"📄 Columns: {df.columns}")
+    # Check for required columns
+    required_cols = ['Customer', 'SONum', 'SOLine']
+    missing_cols = [col for col in required_cols if col not in df.columns]
+    if missing_cols:
+        print(f"❌ Missing required columns: {missing_cols}")
         return
     
     processed = 0
     for _, row in df.iterrows():
-        if pd.isna(row.iloc[0]) or pd.isna(row.iloc[1]):
+        if pd.isna(row['Customer']) or pd.isna(row['SONum']) or pd.isna(row['SOLine']):
             continue
             
-        # Create data object with all columns
+        # Create customer_id from Customer column
+        customer_id = str(row['Customer'])
+        
+        # Create data_id from SONum + SOLine
+        data_id = f"{row['SONum']}-{row['SOLine']}"
+        
+        # Create data object with all columns except Customer, SONum, SOLine
         data = {}
         for col in df.columns:
-            value = row[col]
-            if not pd.isna(value):
-                data[col] = str(value)
+            if col not in ['Customer', 'SONum', 'SOLine']:
+                value = row[col]
+                if not pd.isna(value):
+                    data[col] = str(value)
         
-        # API payload - use customer_name as mandatory name field
+        # Add SONum and SOLine to data for reference
+        data['SONum'] = str(row['SONum'])
+        data['SOLine'] = str(row['SOLine'])
+        
+        # API payload for upsert
         payload = {
-            "name": str(row.iloc[1]),  # customer_name from column 2
+            "customer_id": customer_id,
+            "data_id": data_id,
             "data": data
         }
             
-        # POST to API
-        response = requests.post(f"{api_url}/data", 
+        # PUT to admin upsert endpoint
+        response = requests.put(f"{api_url}/admin/upsert", 
                                headers=headers, json=payload)
-        if response.status_code == 201:
+        if response.status_code == 200:
             processed += 1
         else:
-            print(f"⚠️  Failed to insert row {processed + 1}: {response.text}")
+            print(f"⚠️  Failed to upsert row {processed + 1}: {response.text}")
     
     print(f"✅ Successfully processed {processed} records")
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:
-        print("Usage: python3 csv-to-api.py <xlsx-file> <api-url> <api-key>")
-        print("Example: python3 csv-to-api.py customers.xlsx https://api.example.com/dev your-api-key")
+        print("Usage: python3 csv-to-api.py <xlsx-file> <api-url> <admin-api-key>")
+        print("Example: python3 csv-to-api.py Calyx20250804.xlsx https://api.example.com/dev your-admin-api-key")
         sys.exit(1)
     
     xlsx_file = sys.argv[1]
     api_url = sys.argv[2]
-    api_key = sys.argv[3]
+    admin_api_key = sys.argv[3]
     
     if not os.path.exists(xlsx_file):
         print(f"❌ XLSX file '{xlsx_file}' not found")
         sys.exit(1)
     
-    process_xlsx_via_api(xlsx_file, api_url, api_key)
+    process_xlsx_via_upsert(xlsx_file, api_url, admin_api_key)
