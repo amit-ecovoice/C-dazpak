@@ -34,10 +34,11 @@ python3 csv-to-api.py customers.xlsx https://abc123.execute-api.us-east-1.amazon
 ### Make sure first row has column names . Three columns are mandatory "Customer" , "SONum", "SOLine" ###
 
 Example XLSX with headers:
- | customer_name | email | phone |
+ | Customer | SONum | SOLine |
 |-------------|---------------|-------|
-| John Doe | john@example.com | 555-1234 |
-| Jane Smith | jane@example.com | 555-5678 |
+| ABC | 10932 | 1 |
+| XYZ | 3235 | 1 |
+| XYZ | 3235 | 2 |
 
 ## How It Works
 
